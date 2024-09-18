@@ -1,0 +1,45 @@
+kubectl describe svc -n neg-ingress-api > neg-ingress-api-svc.txt
+
+Name:              neg-ingress-api
+Namespace:         neg-ingress-api
+Labels:            <none>
+Annotations:       app: neg-ingress-api
+                   cloud.google.com/backend-config: {"default": "neg-ingress-api-backend-config"}
+                   cloud.google.com/neg: {"ingress": true}
+                   cloud.google.com/neg-status:
+                     {"network_endpoint_groups":{"8000":"k8s1-9bc8eadb-neg-ingress-api-neg-ingress-api-8000-53449cad"},"zones":["us-central1-a","us-central1-b"...
+Selector:          app=neg-ingress-api
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.99.128.193
+IPs:               10.99.128.193
+Port:              <unset>  8000/TCP
+TargetPort:        8000/TCP
+Endpoints:         10.99.0.219:8000,10.99.0.220:8000
+Session Affinity:  None
+Events:            <none>
+
+
+kubectl describe svc -n loadbalancer-type-api > loadbalancer-type-api-svc.txt
+
+Name:                     loadbalancer-type-api
+Namespace:                loadbalancer-type-api
+Labels:                   <none>
+Annotations:              app: loadbalancer-type-api
+                          cloud.google.com/neg: {"ingress":true}
+Selector:                 app=loadbalancer-type-api
+Type:                     LoadBalancer
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.99.129.108
+IPs:                      10.99.129.108
+LoadBalancer Ingress:     34.172.20.201
+Port:                     <unset>  80/TCP
+TargetPort:               8000/TCP
+NodePort:                 <unset>  31000/TCP
+Endpoints:                10.99.0.221:8000,10.99.0.222:8000
+Session Affinity:         None
+External Traffic Policy:  Local
+HealthCheck NodePort:     
+Events:                   <none>

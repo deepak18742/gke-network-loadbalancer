@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadbalancer-type-api
+  annotations:
+    app: loadbalancer-type-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: loadbalancer-type-api
+  template:
+    metadata:
+      labels:
+        app: loadbalancer-type-api
+    spec:
+      containers:
+        - name: loadbalancer-type-api
+          image: gcr.io/<project-id>/python-ping-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "0.25"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer-type-api
+  annotations:
+    app: loadbalancer-type-api
+spec:
+  selector:
+    app: loadbalancer-type-api
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - port: 80
+      targetPort: 8000
+      nodePort: 31000
+      protocol: TCP
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: 'loadbalancer-type-api-hpa'
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: 'loadbalancer-type-api'
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-neg-api
+  annotations:
+    app: ingress-neg-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ingress-neg-api
+  template:
+    metadata:
+      labels:
+        app: ingress-neg-api
+    spec:
+      containers:
+        - name: ingress-neg-api
+          image: gcr.io/<project-id>/python-ping-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "0.25"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-neg-api
+  annotations:
+    app: ingress-neg-api
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "ingress-neg-api-backend-config"}'
+spec:
+  selector:
+    app: ingress-neg-api
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-neg-api-ingress
+  annotations:
+    app: ingress-neg-api
+    kubernetes.io/ingress.class: gce
+spec:
+  rules:
+  - http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: ingress-neg-api
+                port:
+                  number: 8000
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: ingress-neg-api-backend-config
+spec:
+  healthCheck:
+    checkIntervalSec: 10
+    timeoutSec: 10
+    healthyThreshold: 2
+    unhealthyThreshold: 5
+    port: 8000
+    type: HTTP
+    requestPath: /ping
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: 'ingress-neg-api-hpa'
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: 'ingress-neg-api'
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
